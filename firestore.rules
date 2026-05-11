@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function electionOpen() {
+      return exists(/databases/$(database)/documents/settings/election)
+        && get(/databases/$(database)/documents/settings/election).data.status == 'open';
+    }
+
+    match /admins/{uid} {
+      allow read: if request.auth.uid == uid || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /candidates/{candidateId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /students/{studentId} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (electionOpen()
+          && resource.data.voted == false
+          && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+            'voted', 'votedAt', 'selectedBoyCandidate', 'selectedGirlCandidate'
+          ])
+          && request.resource.data.voted == true);
+    }
+
+    match /votes/{studentId} {
+      allow read: if isAdmin();
+      allow create: if electionOpen()
+        && !exists(/databases/$(database)/documents/votes/$(studentId))
+        && exists(/databases/$(database)/documents/students/$(studentId))
+        && get(/databases/$(database)/documents/students/$(studentId)).data.voted == false
+        && request.resource.data.studentId == studentId
+        && request.resource.data.keys().hasAll([
+          'studentId', 'name', 'className', 'section', 'gender',
+          'selectedBoyCandidate', 'selectedGirlCandidate', 'timestamp'
+        ]);
+      allow update, delete: if isAdmin();
+    }
+  }
+}
