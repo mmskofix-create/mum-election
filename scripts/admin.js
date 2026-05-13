@@ -5,6 +5,7 @@ import {
   serverTimestamp,
   collection,
   doc,
+  getDoc,
   query,
   orderBy,
   onSnapshot,
@@ -19,11 +20,16 @@ import { byId, candidateLabel, createProgressRow, downloadBlob, groupByParticipa
 const state = { students: [], candidates: [], votes: [], electionStatus: 'closed' };
 const loginPanel = byId('loginPanel');
 const adminPanel = byId('adminPanel');
+const adminAccessNotice = byId('adminAccessNotice');
+const adminAccessMessage = byId('adminAccessMessage');
+const adminDocPath = byId('adminDocPath');
 const loginForm = byId('loginForm');
 const loginMessage = byId('loginMessage');
 const logoutBtn = byId('logoutBtn');
 const studentForm = byId('studentForm');
 const candidateForm = byId('candidateForm');
+const studentMessage = byId('studentMessage');
+const candidateMessage = byId('candidateMessage');
 let unsubscribers = [];
 
 loginForm.addEventListener('submit', async (event) => {
@@ -39,33 +45,65 @@ loginForm.addEventListener('submit', async (event) => {
 
 logoutBtn.addEventListener('click', () => signOut(auth));
 
-onAuthStateChanged(auth, (user) => {
-  loginPanel.hidden = Boolean(user);
-  adminPanel.hidden = !user;
-  logoutBtn.hidden = !user;
+onAuthStateChanged(auth, async (user) => {
   unsubscribers.forEach((unsubscribe) => unsubscribe());
   unsubscribers = [];
-  if (user) subscribeAdminData();
+  loginPanel.hidden = Boolean(user);
+  adminPanel.hidden = true;
+  adminAccessNotice.hidden = true;
+  logoutBtn.hidden = !user;
+
+  if (!user) return;
+
+  try {
+    const adminSnap = await getDoc(doc(db, 'admins', user.uid));
+    if (!adminSnap.exists()) {
+      adminDocPath.textContent = `admins/${user.uid}`;
+      adminAccessMessage.textContent = `Signed in as ${user.email || user.uid}, but this account is not allow-listed as an election admin.`;
+      adminAccessNotice.hidden = false;
+      return;
+    }
+    adminPanel.hidden = false;
+    subscribeAdminData();
+  } catch (error) {
+    adminAccessMessage.textContent = `Admin permission check failed: ${formatFirebaseError(error)}`;
+    adminAccessNotice.hidden = false;
+  }
 });
+
+
+function formatFirebaseError(error) {
+  if (error?.code === 'permission-denied') {
+    return 'Missing or insufficient permissions. Make sure firestore.rules is published and this user has an admins/{uid} document.';
+  }
+  return error?.message || 'Unknown Firebase error.';
+}
+
+function snapshotError(area) {
+  return (error) => {
+    adminAccessMessage.textContent = `${area} listener failed: ${formatFirebaseError(error)}`;
+    adminAccessNotice.hidden = false;
+  };
+}
 
 function subscribeAdminData() {
   unsubscribers.push(
     onSnapshot(query(collection(db, 'students'), orderBy('rollNumber', 'asc')), (snapshot) => {
       state.students = snapshot.docs.map((studentDoc) => ({ id: studentDoc.id, ...studentDoc.data() }));
       renderAll();
-    }),
+    }, snapshotError('Students')),
     onSnapshot(query(collection(db, 'candidates'), orderBy('createdAt', 'asc')), (snapshot) => {
       state.candidates = snapshot.docs.map((candidateDoc) => ({ id: candidateDoc.id, ...candidateDoc.data() }));
       renderAll();
-    }),
+    }, snapshotError('Candidates')),
     onSnapshot(query(collection(db, 'votes'), orderBy('timestamp', 'desc')), (snapshot) => {
       state.votes = snapshot.docs.map((voteDoc) => ({ id: voteDoc.id, ...voteDoc.data() }));
       renderAll();
-    }),
+    }, snapshotError('Votes')),
     onSnapshot(doc(db, 'settings', 'election'), (snapshot) => {
       state.electionStatus = snapshot.exists() ? snapshot.data().status : 'closed';
       renderAll();
-    }),
+    }, snapshotError('Election settings')),
   );
 }
 
@@ -129,9 +167,23 @@ document.addEventListener('click', async (event) => {
     target.textContent = 'Copied';
   }
   if (target.dataset.editStudent) fillStudentForm(state.students.find((student) => student.id === target.dataset.editStudent));
-  if (target.dataset.deleteStudent && confirm('Delete this student record?')) await deleteDoc(doc(db, 'students', target.dataset.deleteStudent));
+  if (target.dataset.deleteStudent && confirm('Delete this student record?')) {
+    try {
+      await deleteDoc(doc(db, 'students', target.dataset.deleteStudent));
+      showMessage(studentMessage, 'Student deleted successfully.', 'info');
+    } catch (error) {
+      showMessage(studentMessage, formatFirebaseError(error), 'error');
+    }
+  }
   if (target.dataset.editCandidate) fillCandidateForm(state.candidates.find((candidate) => candidate.id === target.dataset.editCandidate));
-  if (target.dataset.deleteCandidate && confirm('Delete this candidate?')) await deleteDoc(doc(db, 'candidates', target.dataset.deleteCandidate));
+  if (target.dataset.deleteCandidate && confirm('Delete this candidate?')) {
+    try {
+      await deleteDoc(doc(db, 'candidates', target.dataset.deleteCandidate));
+      showMessage(candidateMessage, 'Candidate deleted successfully.', 'info');
+    } catch (error) {
+      showMessage(candidateMessage, formatFirebaseError(error), 'error');
+    }
+  }
 });
 
 studentForm.addEventListener('submit', async (event) => {
@@ -145,19 +197,29 @@ studentForm.addEventListener('submit', async (event) => {
     gender: data.gender,
     updatedAt: serverTimestamp(),
   };
-  if (data.id) await updateDoc(doc(db, 'students', data.id), payload);
-  else await addDoc(collection(db, 'students'), { ...payload, accessCode: makeAccessCode(), voted: false, createdAt: serverTimestamp() });
-  studentForm.reset();
+  try {
+    if (data.id) await updateDoc(doc(db, 'students', data.id), payload);
+    else await addDoc(collection(db, 'students'), { ...payload, accessCode: makeAccessCode(), voted: false, createdAt: serverTimestamp() });
+    studentForm.reset();
+    showMessage(studentMessage, 'Student saved successfully.', 'info');
+  } catch (error) {
+    showMessage(studentMessage, formatFirebaseError(error), 'error');
+  }
 });
 
 candidateForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const data = Object.fromEntries(new FormData(candidateForm));
   const payload = { name: data.name.trim(), group: data.group, symbol: data.symbol.trim(), description: data.description.trim(), active: data.active === 'on', updatedAt: serverTimestamp() };
-  if (data.id) await updateDoc(doc(db, 'candidates', data.id), payload);
-  else await addDoc(collection(db, 'candidates'), { ...payload, createdAt: serverTimestamp() });
-  candidateForm.reset();
-  candidateForm.elements.active.checked = true;
+  try {
+    if (data.id) await updateDoc(doc(db, 'candidates', data.id), payload);
+    else await addDoc(collection(db, 'candidates'), { ...payload, createdAt: serverTimestamp() });
+    candidateForm.reset();
+    candidateForm.elements.active.checked = true;
+    showMessage(candidateMessage, 'Candidate saved successfully.', 'info');
+  } catch (error) {
+    showMessage(candidateMessage, formatFirebaseError(error), 'error');
+  }
 });
 
 function fillStudentForm(student) {
@@ -183,15 +245,31 @@ function fillCandidateForm(candidate) {
 
 byId('clearStudentForm').addEventListener('click', () => studentForm.reset());
 byId('clearCandidateForm').addEventListener('click', () => { candidateForm.reset(); candidateForm.elements.active.checked = true; });
-byId('startVotingBtn').addEventListener('click', () => setDoc(doc(db, 'settings', 'election'), { status: 'open', updatedAt: serverTimestamp() }, { merge: true }));
-byId('stopVotingBtn').addEventListener('click', () => setDoc(doc(db, 'settings', 'election'), { status: 'closed', updatedAt: serverTimestamp() }, { merge: true }));
+byId('startVotingBtn').addEventListener('click', async () => {
+  try {
+    await setDoc(doc(db, 'settings', 'election'), { status: 'open', updatedAt: serverTimestamp() }, { merge: true });
+  } catch (error) {
+    alert(formatFirebaseError(error));
+  }
+});
+byId('stopVotingBtn').addEventListener('click', async () => {
+  try {
+    await setDoc(doc(db, 'settings', 'election'), { status: 'closed', updatedAt: serverTimestamp() }, { merge: true });
+  } catch (error) {
+    alert(formatFirebaseError(error));
+  }
+});
 byId('resetElectionBtn').addEventListener('click', async () => {
   if (!confirm('Reset all votes and mark every student as not voted?')) return;
-  const batch = writeBatch(db);
-  state.students.forEach((student) => batch.update(doc(db, 'students', student.id), { voted: false, votedAt: null, selectedBoyCandidate: null, selectedGirlCandidate: null }));
-  state.votes.forEach((vote) => batch.delete(doc(db, 'votes', vote.id)));
-  batch.set(doc(db, 'settings', 'election'), { status: 'closed', updatedAt: serverTimestamp() }, { merge: true });
-  await batch.commit();
+  try {
+    const batch = writeBatch(db);
+    state.students.forEach((student) => batch.update(doc(db, 'students', student.id), { voted: false, votedAt: null, selectedBoyCandidate: null, selectedGirlCandidate: null }));
+    state.votes.forEach((vote) => batch.delete(doc(db, 'votes', vote.id)));
+    batch.set(doc(db, 'settings', 'election'), { status: 'closed', updatedAt: serverTimestamp() }, { merge: true });
+    await batch.commit();
+  } catch (error) {
+    alert(formatFirebaseError(error));
+  }
 });
 
 byId('exportCsvBtn').addEventListener('click', () => {

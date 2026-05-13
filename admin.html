@@ -32,6 +32,12 @@
         </form>
       </section>
 
+      <section class="notice-card warning" id="adminAccessNotice" hidden>
+        <h2>Admin permission required</h2>
+        <p id="adminAccessMessage">You are signed in, but this account is not allow-listed as an election admin.</p>
+        <p>Create a Firestore document at <code id="adminDocPath">admins/UID</code>, then refresh this page.</p>
+      </section>
+
       <section id="adminPanel" hidden>
         <div class="dashboard-hero">
           <div>
@@ -65,6 +71,7 @@
               <label>Gender<select name="gender" required><option value="Boy">Boy</option><option value="Girl">Girl</option></select></label>
               <button class="primary-btn" type="submit">Save Student</button>
             </form>
+            <p id="studentMessage" role="status"></p>
             <div class="table-wrap"><table><thead><tr><th>Roll</th><th>Name</th><th>Class</th><th>Section</th><th>Gender</th><th>Voted</th><th>Access Link</th><th>Actions</th></tr></thead><tbody id="studentsTable"></tbody></table></div>
           </article>
 
@@ -79,6 +86,7 @@
               <label class="check-row"><input type="checkbox" name="active" checked /> Active</label>
               <button class="primary-btn" type="submit">Save Candidate</button>
             </form>
+            <p id="candidateMessage" role="status"></p>
             <div id="candidateList" class="mini-list"></div>
           </article>
 

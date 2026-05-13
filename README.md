@@ -31,6 +31,16 @@ The student opens the link, selects one boy candidate and one girl candidate, an
 5. Publish `firestore.rules` to Firestore Rules.
 6. Host these static files using Firebase Hosting or any static web server.
 
+
+## Candidate add troubleshooting
+
+If the admin panel shows an error while adding candidates, the most common cause is Firebase permissions, not the candidate form itself:
+
+1. Confirm you are signed in with the same Firebase Auth user whose UID is stored at `admins/{ADMIN_UID}`.
+2. Confirm `firestore.rules` has been published in the Firebase console.
+3. If the page says `Missing or insufficient permissions`, copy the UID/path shown in the admin warning and create that exact admin document in Firestore.
+4. Refresh `admin.html` after creating the admin document, then add the two boy candidates and two girl candidates again.
+
 ## Collections
 
 - `settings/election` — `{ status: "open" | "closed", updatedAt }`
