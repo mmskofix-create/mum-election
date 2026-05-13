@@ -30,7 +30,53 @@ const studentForm = byId('studentForm');
 const candidateForm = byId('candidateForm');
 const studentMessage = byId('studentMessage');
 const candidateMessage = byId('candidateMessage');
+const adminMenuToggle = byId('adminMenuToggle');
+const adminTabMenu = byId('adminTabMenu');
+const adminTabButtons = [...document.querySelectorAll('[data-admin-tab]')];
+const adminSections = [...document.querySelectorAll('[data-admin-section]')];
+let activeAdminTab = 'overview';
 let unsubscribers = [];
+
+
+function closeAdminMenu() {
+  adminTabMenu.classList.remove('open');
+  adminMenuToggle.classList.remove('open');
+  adminMenuToggle.setAttribute('aria-expanded', 'false');
+}
+
+function toggleAdminMenu() {
+  const isOpen = adminTabMenu.classList.toggle('open');
+  adminMenuToggle.classList.toggle('open', isOpen);
+  adminMenuToggle.setAttribute('aria-expanded', String(isOpen));
+}
+
+function setAdminTab(tabName) {
+  activeAdminTab = tabName;
+  adminSections.forEach((section) => {
+    section.hidden = section.dataset.adminSection !== tabName;
+  });
+  adminTabButtons.forEach((button) => {
+    button.classList.toggle('active', button.dataset.adminTab === tabName);
+  });
+  closeAdminMenu();
+}
+
+adminMenuToggle.addEventListener('click', (event) => {
+  event.stopPropagation();
+  toggleAdminMenu();
+});
+
+adminTabButtons.forEach((button) => {
+  button.addEventListener('click', () => setAdminTab(button.dataset.adminTab));
+});
+
+document.addEventListener('click', (event) => {
+  if (!adminTabMenu.contains(event.target) && !adminMenuToggle.contains(event.target)) closeAdminMenu();
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') closeAdminMenu();
+});
 
 loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -64,6 +110,7 @@ onAuthStateChanged(auth, async (user) => {
       return;
     }
     adminPanel.hidden = false;
+    setAdminTab(activeAdminTab);
     subscribeAdminData();
   } catch (error) {
     adminAccessMessage.textContent = `Admin permission check failed: ${formatFirebaseError(error)}`;

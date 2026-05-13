@@ -10,9 +10,17 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="topbar">
+    <header class="topbar admin-topbar">
       <a class="brand" href="index.html"><span class="brand-mark">✓</span><span><strong>Control Room</strong><small>Admin Dashboard</small></span></a>
-      <nav class="top-links">
+      <button class="hamburger-btn" type="button" id="adminMenuToggle" aria-controls="adminTabMenu" aria-expanded="false" aria-label="Open admin menu">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="top-links admin-tab-menu" id="adminTabMenu" aria-label="Admin navigation">
+        <button class="admin-tab-btn active" type="button" data-admin-tab="overview">Overview</button>
+        <button class="admin-tab-btn" type="button" data-admin-tab="students">Students</button>
+        <button class="admin-tab-btn" type="button" data-admin-tab="candidates">Candidates</button>
+        <button class="admin-tab-btn" type="button" data-admin-tab="results">Results</button>
+        <button class="admin-tab-btn" type="button" data-admin-tab="analytics">Analytics</button>
         <a href="index.html">Student Vote</a>
         <a href="live.html">Live Screen</a>
         <button class="theme-toggle" type="button" data-theme-toggle>🌙</button>
@@ -39,27 +47,29 @@
       </section>
 
       <section id="adminPanel" hidden>
-        <div class="dashboard-hero">
-          <div>
-            <p class="eyebrow">Live election control</p>
-            <h1>School/Madrasa Digital Election Platform</h1>
-            <p>Manage students, candidates, voting state, analytics, winners, and exports in one secure dashboard.</p>
+        <section class="admin-section" data-admin-section="overview">
+          <div class="dashboard-hero">
+            <div>
+              <p class="eyebrow">Live election control</p>
+              <h1>School/Madrasa Digital Election Platform</h1>
+              <p>Manage students, candidates, voting state, analytics, winners, and exports in one secure dashboard.</p>
+            </div>
+            <div class="control-cluster">
+              <button class="primary-btn" type="button" id="startVotingBtn">Start Voting</button>
+              <button class="danger-btn" type="button" id="stopVotingBtn">Stop Voting</button>
+              <button class="ghost-btn" type="button" id="resetElectionBtn">Reset Election</button>
+            </div>
           </div>
-          <div class="control-cluster">
-            <button class="primary-btn" type="button" id="startVotingBtn">Start Voting</button>
-            <button class="danger-btn" type="button" id="stopVotingBtn">Stop Voting</button>
-            <button class="ghost-btn" type="button" id="resetElectionBtn">Reset Election</button>
-          </div>
-        </div>
 
-        <section class="metric-grid">
-          <article class="metric-card"><span>Total Students</span><strong id="totalStudents">0</strong></article>
-          <article class="metric-card"><span>Total Votes</span><strong id="totalVotes">0</strong></article>
-          <article class="metric-card"><span>Polling %</span><strong id="pollPercent">0%</strong></article>
-          <article class="metric-card"><span>Status</span><strong id="adminStatus">Closed</strong></article>
+          <section class="metric-grid">
+            <article class="metric-card"><span>Total Students</span><strong id="totalStudents">0</strong></article>
+            <article class="metric-card"><span>Total Votes</span><strong id="totalVotes">0</strong></article>
+            <article class="metric-card"><span>Polling %</span><strong id="pollPercent">0%</strong></article>
+            <article class="metric-card"><span>Status</span><strong id="adminStatus">Closed</strong></article>
+          </section>
         </section>
 
-        <section class="content-grid">
+        <section class="content-grid admin-section" data-admin-section="students" hidden>
           <article class="panel-card wide">
             <div class="panel-header"><h2>Student records</h2><button class="ghost-btn" type="button" id="clearStudentForm">New Student</button></div>
             <form id="studentForm" class="record-form">
@@ -74,8 +84,10 @@
             <p id="studentMessage" role="status"></p>
             <div class="table-wrap"><table><thead><tr><th>Roll</th><th>Name</th><th>Class</th><th>Section</th><th>Gender</th><th>Voted</th><th>Access Link</th><th>Actions</th></tr></thead><tbody id="studentsTable"></tbody></table></div>
           </article>
+        </section>
 
-          <article class="panel-card">
+        <section class="content-grid admin-section" data-admin-section="candidates" hidden>
+          <article class="panel-card wide">
             <div class="panel-header"><h2>Candidates</h2><button class="ghost-btn" type="button" id="clearCandidateForm">New Candidate</button></div>
             <form id="candidateForm" class="stack-form compact">
               <input type="hidden" name="id" />
@@ -89,14 +101,18 @@
             <p id="candidateMessage" role="status"></p>
             <div id="candidateList" class="mini-list"></div>
           </article>
+        </section>
 
-          <article class="panel-card">
+        <section class="content-grid admin-section" data-admin-section="results" hidden>
+          <article class="panel-card wide">
             <div class="panel-header"><h2>Candidate-wise results</h2></div>
             <div id="resultsList" class="mini-list"></div>
             <div class="winner-box"><strong>Boy Winner:</strong> <span id="boyWinner">Pending</span></div>
             <div class="winner-box"><strong>Girl Winner:</strong> <span id="girlWinner">Pending</span></div>
           </article>
+        </section>
 
+        <section class="content-grid admin-section" data-admin-section="analytics" hidden>
           <article class="panel-card wide">
             <div class="panel-header"><h2>Participation analytics</h2><div><button class="ghost-btn" type="button" id="exportCsvBtn">Export Excel/CSV</button><button class="ghost-btn" type="button" id="exportPdfBtn">Export PDF</button></div></div>
             <div class="analytics-columns"><div><h3>Class-wise</h3><div id="classAnalytics"></div></div><div><h3>Gender-wise</h3><div id="genderAnalytics"></div></div><div><h3>Section-wise</h3><div id="sectionAnalytics"></div></div></div>
