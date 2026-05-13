@@ -1,4 +1,4 @@
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
 import {
   auth,
   db,
@@ -31,6 +31,8 @@ const candidateForm = byId('candidateForm');
 const studentMessage = byId('studentMessage');
 const candidateMessage = byId('candidateMessage');
 const adminMenuToggle = byId('adminMenuToggle');
+const adminMenuClose = byId('adminMenuClose');
+const adminMenuBackdrop = byId('adminMenuBackdrop');
 const adminTabMenu = byId('adminTabMenu');
 const adminTabButtons = [...document.querySelectorAll('[data-admin-tab]')];
 const adminSections = [...document.querySelectorAll('[data-admin-section]')];
@@ -42,12 +44,16 @@ function closeAdminMenu() {
   adminTabMenu.classList.remove('open');
   adminMenuToggle.classList.remove('open');
   adminMenuToggle.setAttribute('aria-expanded', 'false');
+  adminMenuBackdrop.hidden = true;
+  document.body.classList.remove('menu-open');
 }
 
 function toggleAdminMenu() {
   const isOpen = adminTabMenu.classList.toggle('open');
   adminMenuToggle.classList.toggle('open', isOpen);
   adminMenuToggle.setAttribute('aria-expanded', String(isOpen));
+  adminMenuBackdrop.hidden = !isOpen;
+  document.body.classList.toggle('menu-open', isOpen);
 }
 
 function setAdminTab(tabName) {
@@ -59,6 +65,7 @@ function setAdminTab(tabName) {
     button.classList.toggle('active', button.dataset.adminTab === tabName);
   });
   closeAdminMenu();
+  byId('adminPanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 adminMenuToggle.addEventListener('click', (event) => {
@@ -66,12 +73,19 @@ adminMenuToggle.addEventListener('click', (event) => {
   toggleAdminMenu();
 });
 
+adminMenuClose.addEventListener('click', closeAdminMenu);
+adminMenuBackdrop.addEventListener('click', closeAdminMenu);
+
 adminTabButtons.forEach((button) => {
   button.addEventListener('click', () => setAdminTab(button.dataset.adminTab));
 });
 
 document.addEventListener('click', (event) => {
   if (!adminTabMenu.contains(event.target) && !adminMenuToggle.contains(event.target)) closeAdminMenu();
+});
+
+adminTabMenu.querySelectorAll('a').forEach((link) => {
+  link.addEventListener('click', closeAdminMenu);
 });
 
 document.addEventListener('keydown', (event) => {
@@ -82,10 +96,12 @@ loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const data = new FormData(loginForm);
   try {
+    showMessage(loginMessage, 'Signing in and checking admin access...', 'info');
+    await setPersistence(auth, browserLocalPersistence);
     await signInWithEmailAndPassword(auth, data.get('email'), data.get('password'));
     loginForm.reset();
   } catch (error) {
-    showMessage(loginMessage, error.message, 'error');
+    showMessage(loginMessage, formatAuthError(error), 'error');
   }
 });
 
@@ -118,6 +134,19 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
+
+
+function formatAuthError(error) {
+  const messages = {
+    'auth/invalid-credential': 'Invalid email or password. Please check the admin login details.',
+    'auth/user-not-found': 'No Firebase Auth user exists for this email.',
+    'auth/wrong-password': 'Incorrect password for this admin email.',
+    'auth/too-many-requests': 'Too many failed attempts. Wait a few minutes and try again.',
+    'auth/unauthorized-domain': 'This website domain is not authorized in Firebase Authentication settings.',
+    'auth/network-request-failed': 'Network error. Check internet connection and Firebase availability.',
+  };
+  return messages[error?.code] || error?.message || 'Admin login failed.';
+}
 
 function formatFirebaseError(error) {
   if (error?.code === 'permission-denied') {

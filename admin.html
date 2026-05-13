@@ -16,16 +16,22 @@
         <span></span><span></span><span></span>
       </button>
       <nav class="top-links admin-tab-menu" id="adminTabMenu" aria-label="Admin navigation">
+        <div class="drawer-header">
+          <span><strong>Admin Tabs</strong><small>Select a section</small></span>
+          <button class="drawer-close" type="button" id="adminMenuClose" aria-label="Close admin menu">×</button>
+        </div>
         <button class="admin-tab-btn active" type="button" data-admin-tab="overview">Overview</button>
         <button class="admin-tab-btn" type="button" data-admin-tab="students">Students</button>
         <button class="admin-tab-btn" type="button" data-admin-tab="candidates">Candidates</button>
         <button class="admin-tab-btn" type="button" data-admin-tab="results">Results</button>
         <button class="admin-tab-btn" type="button" data-admin-tab="analytics">Analytics</button>
+        <hr class="drawer-divider" />
         <a href="index.html">Student Vote</a>
         <a href="live.html">Live Screen</a>
-        <button class="theme-toggle" type="button" data-theme-toggle>🌙</button>
+        <button class="theme-toggle" type="button" data-theme-toggle>🌙 Dark Mode</button>
         <button class="ghost-btn" type="button" id="logoutBtn" hidden>Logout</button>
       </nav>
+      <button class="menu-backdrop" type="button" id="adminMenuBackdrop" aria-label="Close admin menu" hidden></button>
     </header>
 
     <main class="dashboard-shell">
@@ -36,6 +42,7 @@
           <label>Email<input type="email" name="email" autocomplete="email" required /></label>
           <label>Password<input type="password" name="password" autocomplete="current-password" required /></label>
           <button class="primary-btn" type="submit">Sign In</button>
+          <p class="helper-text">Same admin account can stay signed in on multiple devices. Firebase will not block simultaneous admin logins.</p>
           <p id="loginMessage" role="status"></p>
         </form>
       </section>
