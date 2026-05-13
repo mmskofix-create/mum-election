@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Madrasa Election | Live Polling Screen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="live-page">
+    <header class="topbar simple">
+      <a class="brand" href="index.html"><span class="brand-mark">✓</span><span><strong>Live Polling</strong><small>Projector/TV Display</small></span></a>
+      <nav class="top-links"><a href="index.html">Vote</a><a href="admin.html">Admin</a><button class="theme-toggle" type="button" data-theme-toggle>🌙</button></nav>
+    </header>
+
+    <main class="live-shell">
+      <section class="live-hero">
+        <div>
+          <p class="eyebrow">Real-time participation only</p>
+          <h1>Election Polling Progress</h1>
+          <p>No candidate-wise results are shown on this public screen.</p>
+        </div>
+        <div class="countdown-card"><span>Voting Status</span><strong id="liveStatus">Closed</strong><small id="clock">--:--:--</small></div>
+      </section>
+
+      <section class="metric-grid big">
+        <article class="metric-card"><span>Total Polling</span><strong id="livePercent">0%</strong></article>
+        <article class="metric-card"><span>Total Students Voted</span><strong id="liveVoted">0</strong></article>
+        <article class="metric-card"><span>Total Students</span><strong id="liveTotal">0</strong></article>
+      </section>
+
+      <section class="public-progress">
+        <div class="circle-chart" aria-label="Total polling percentage"><span id="circlePercent">0%</span></div>
+        <div class="progress-row jumbo"><div class="progress-meta"><span>Overall live progress</span><strong id="overallLabel">0%</strong></div><div class="progress-track"><span id="overallBar"></span></div></div>
+      </section>
+
+      <section class="analytics-columns live">
+        <article class="panel-card"><h2>Class-wise participation</h2><div id="liveClass"></div></article>
+        <article class="panel-card"><h2>Gender-wise participation</h2><div id="liveGender"></div></article>
+        <article class="panel-card"><h2>Section-wise participation</h2><div id="liveSection"></div></article>
+      </section>
+    </main>
+
+    <script type="module" src="scripts/live.js"></script>
+  </body>
+</html>

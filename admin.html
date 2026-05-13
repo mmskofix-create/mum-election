@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Madrasa Election | Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar admin-topbar">
+      <a class="brand" href="index.html"><span class="brand-mark">✓</span><span><strong>Control Room</strong><small>Admin Dashboard</small></span></a>
+      <button class="hamburger-btn" type="button" id="adminMenuToggle" aria-controls="adminTabMenu" aria-expanded="false" aria-label="Open admin menu">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="top-links admin-tab-menu" id="adminTabMenu" aria-label="Admin navigation">
+        <div class="drawer-header">
+          <span><strong>Admin Tabs</strong><small>Select a section</small></span>
+          <button class="drawer-close" type="button" id="adminMenuClose" aria-label="Close admin menu">×</button>
+        </div>
+        <button class="admin-tab-btn active" type="button" data-admin-tab="overview">Overview</button>
+        <button class="admin-tab-btn" type="button" data-admin-tab="students">Students</button>
+        <button class="admin-tab-btn" type="button" data-admin-tab="candidates">Candidates</button>
+        <button class="admin-tab-btn" type="button" data-admin-tab="results">Results</button>
+        <button class="admin-tab-btn" type="button" data-admin-tab="analytics">Analytics</button>
+        <hr class="drawer-divider" />
+        <a href="index.html">Student Vote</a>
+        <a href="live.html">Live Screen</a>
+        <button class="theme-toggle" type="button" data-theme-toggle>🌙 Dark Mode</button>
+        <button class="ghost-btn" type="button" id="logoutBtn" hidden>Logout</button>
+      </nav>
+      <button class="menu-backdrop" type="button" id="adminMenuBackdrop" aria-label="Close admin menu" hidden></button>
+    </header>
+
+    <main class="dashboard-shell">
+      <section class="login-card" id="loginPanel">
+        <p class="eyebrow">Secure admin access</p>
+        <h1>Sign in to manage election</h1>
+        <form id="loginForm" class="stack-form">
+          <label>Email<input type="email" name="email" autocomplete="email" required /></label>
+          <label>Password<input type="password" name="password" autocomplete="current-password" required /></label>
+          <button class="primary-btn" type="submit">Sign In</button>
+          <p class="helper-text">Same admin account can stay signed in on multiple devices. Firebase will not block simultaneous admin logins.</p>
+          <p id="loginMessage" role="status"></p>
+        </form>
+      </section>
+
+      <section class="notice-card warning" id="adminAccessNotice" hidden>
+        <h2>Admin permission required</h2>
+        <p id="adminAccessMessage">You are signed in, but this account is not allow-listed as an election admin.</p>
+        <p>Create a Firestore document at <code id="adminDocPath">admins/UID</code>, then refresh this page.</p>
+      </section>
+
+      <section id="adminPanel" hidden>
+        <section class="admin-section" data-admin-section="overview">
+          <div class="dashboard-hero">
+            <div>
+              <p class="eyebrow">Live election control</p>
+              <h1>School/Madrasa Digital Election Platform</h1>
+              <p>Manage students, candidates, voting state, analytics, winners, and exports in one secure dashboard.</p>
+            </div>
+            <div class="control-cluster">
+              <button class="primary-btn" type="button" id="startVotingBtn">Start Voting</button>
+              <button class="danger-btn" type="button" id="stopVotingBtn">Stop Voting</button>
+              <button class="ghost-btn" type="button" id="resetElectionBtn">Reset Election</button>
+            </div>
+          </div>
+
+          <section class="metric-grid">
+            <article class="metric-card"><span>Total Students</span><strong id="totalStudents">0</strong></article>
+            <article class="metric-card"><span>Total Votes</span><strong id="totalVotes">0</strong></article>
+            <article class="metric-card"><span>Polling %</span><strong id="pollPercent">0%</strong></article>
+            <article class="metric-card"><span>Status</span><strong id="adminStatus">Closed</strong></article>
+          </section>
+        </section>
+
+        <section class="content-grid admin-section" data-admin-section="students" hidden>
+          <article class="panel-card wide">
+            <div class="panel-header"><h2>Student records</h2><button class="ghost-btn" type="button" id="clearStudentForm">New Student</button></div>
+            <form id="studentForm" class="record-form">
+              <input type="hidden" name="id" />
+              <label>Roll Number<input name="rollNumber" required /></label>
+              <label>Name<input name="name" required /></label>
+              <label>Class<input name="className" required /></label>
+              <label>Section<input name="section" required /></label>
+              <label>Gender<select name="gender" required><option value="Boy">Boy</option><option value="Girl">Girl</option></select></label>
+              <button class="primary-btn" type="submit">Save Student</button>
+            </form>
+            <p id="studentMessage" role="status"></p>
+            <div class="table-wrap"><table><thead><tr><th>Roll</th><th>Name</th><th>Class</th><th>Section</th><th>Gender</th><th>Voted</th><th>Access Link</th><th>Actions</th></tr></thead><tbody id="studentsTable"></tbody></table></div>
+          </article>
+        </section>
+
+        <section class="content-grid admin-section" data-admin-section="candidates" hidden>
+          <article class="panel-card wide">
+            <div class="panel-header"><h2>Candidates</h2><button class="ghost-btn" type="button" id="clearCandidateForm">New Candidate</button></div>
+            <form id="candidateForm" class="stack-form compact">
+              <input type="hidden" name="id" />
+              <label>Name<input name="name" required /></label>
+              <label>Group<select name="group" required><option value="boy">Boy candidate</option><option value="girl">Girl candidate</option></select></label>
+              <label>Symbol/House<input name="symbol" /></label>
+              <label>Description<input name="description" /></label>
+              <label class="check-row"><input type="checkbox" name="active" checked /> Active</label>
+              <button class="primary-btn" type="submit">Save Candidate</button>
+            </form>
+            <p id="candidateMessage" role="status"></p>
+            <div id="candidateList" class="mini-list"></div>
+          </article>
+        </section>
+
+        <section class="content-grid admin-section" data-admin-section="results" hidden>
+          <article class="panel-card wide">
+            <div class="panel-header"><h2>Candidate-wise results</h2></div>
+            <div id="resultsList" class="mini-list"></div>
+            <div class="winner-box"><strong>Boy Winner:</strong> <span id="boyWinner">Pending</span></div>
+            <div class="winner-box"><strong>Girl Winner:</strong> <span id="girlWinner">Pending</span></div>
+          </article>
+        </section>
+
+        <section class="content-grid admin-section" data-admin-section="analytics" hidden>
+          <article class="panel-card wide">
+            <div class="panel-header"><h2>Participation analytics</h2><div><button class="ghost-btn" type="button" id="exportCsvBtn">Export Excel/CSV</button><button class="ghost-btn" type="button" id="exportPdfBtn">Export PDF</button></div></div>
+            <div class="analytics-columns"><div><h3>Class-wise</h3><div id="classAnalytics"></div></div><div><h3>Gender-wise</h3><div id="genderAnalytics"></div></div><div><h3>Section-wise</h3><div id="sectionAnalytics"></div></div></div>
+          </article>
+        </section>
+      </section>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script type="module" src="scripts/admin.js"></script>
+  </body>
+</html>

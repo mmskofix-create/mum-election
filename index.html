@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Madrasa Election | Student Voting</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="student-page">
+    <header class="topbar simple">
+      <a class="brand" href="index.html" aria-label="Election home">
+        <span class="brand-mark">✓</span>
+        <span><strong>Madrasa Election</strong><small>Secure Student Voting</small></span>
+      </a>
+      <nav class="top-links" aria-label="System links">
+        <a href="live.html">Live Polling</a>
+        <a href="admin.html">Admin</a>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle dark mode">🌙</button>
+      </nav>
+    </header>
+
+    <main class="student-shell">
+      <section class="hero-card">
+        <div>
+          <p class="eyebrow">One student • One vote</p>
+          <h1>Choose your Boy and Girl representatives</h1>
+          <p class="hero-copy">Select one candidate from each section, then submit. No class, roll number, gender, or personal details are entered on this page.</p>
+        </div>
+        <div class="status-pill" id="electionStatus">Checking voting status...</div>
+      </section>
+
+      <section class="notice-card" id="accessNotice" hidden>
+        <h2>Voting access required</h2>
+        <p>Open the unique voting link issued from the admin control room. Example: <code>index.html?student=STUDENT-ID&amp;access=STUDENT-CODE</code></p>
+      </section>
+
+      <section class="notice-card success" id="successNotice" hidden>
+        <h2>Your vote has been submitted successfully.</h2>
+        <p>Thank you for participating in the school/madrasa election.</p>
+      </section>
+
+      <section class="notice-card warning" id="alreadyNotice" hidden>
+        <h2>You have already voted.</h2>
+        <p>Each student can vote only once. Please contact the control room if this is unexpected.</p>
+      </section>
+
+      <form id="voteForm" class="vote-grid" hidden>
+        <fieldset class="candidate-panel">
+          <legend>Boy candidate section</legend>
+          <div class="candidate-list" id="boyCandidates"></div>
+        </fieldset>
+
+        <fieldset class="candidate-panel accent-pink">
+          <legend>Girl candidate section</legend>
+          <div class="candidate-list" id="girlCandidates"></div>
+        </fieldset>
+
+        <div class="submit-panel">
+          <p id="voteMessage" role="status"></p>
+          <button class="primary-btn" type="submit">Submit Vote</button>
+        </div>
+      </form>
+    </main>
+
+    <script type="module" src="scripts/vote.js"></script>
+  </body>
+</html>
